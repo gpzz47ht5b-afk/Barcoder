@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+
+  <head>
+    <meta charset="UTF-8">
+    <title>Untitled</title>
+    
+
+  </head>
+    
+  <body>
+  <!DOCTYPE html>
+<html lang="tr">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Honeywell Barkod Arama</title>
+  <script src="https://cdn.sheetjs.com/xlsx-0.20.2/package/dist/xlsx.full.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js"></script>
+  <style>
+    body {
+      font-family: Arial;
+      background: #111827;
+      color: white;
+      padding: 20px;
+    }
+
+    .card {
+      background: #1f2937;
+      padding: 20px;
+      border-radius: 16px;
+      margin-bottom: 20px;
+    }
+
+    input,
+    button {
+      width: 100%;
+      padding: 14px;
+      margin-top: 10px;
+      border: none;
+      border-radius: 10px;
+      font-size: 18px;
+    }
+
+    input {
+      background: #374151;
+      color: white;
+    }
+
+    button {
+      background: #2563eb;
+      color: white;
+      font-weight: bold;
+    }
+
+    .barcodeBox {
+      background: white;
+      padding: 20px;
+      border-radius: 12px;
+      margin-top: 20px;
+      text-align: center;
+    }
+
+    svg {
+      width: 100%;
+      max-width: 600px;
+      height: 140px;
+    }
+
+    .row {
+      padding: 8px;
+      border-bottom: 1px solid #374151;
+    }
+
+    .label {
+      font-weight: bold;
+      color: #93c5fd;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="card">
+    <h2>Honeywell Barkod Arama</h2>
+    <input type="file" id="fileInput" accept=".xlsx,.xls">
+    <input type="text" id="searchInput" placeholder="Arama">
+    <button onclick="searchData()">Ara</button>
+  </div>
+  <div id="results"></div>
+  <script>
+    let excelData = [];
+    let headers = [];
+    document.getElementById('fileInput').addEventListener('change', function(e) {
+      const file = e.target.files[0];
+      const reader = new FileReader();
+      reader.onload = function(evt) {
+        const data = new Uint8Array(evt.target.result);
+        const workbook = XLSX.read(data, {
+          type: 'array'
+        });
+        const sheet = workbook.Sheets[workbook.SheetNames[0]];
+        excelData = XLSX.utils.sheet_to_json(sheet, {
+          defval: ''
+        });
+        headers = Object.keys(excelData[0]);
+        alert('Excel yüklendi');
+      };
+      reader.readAsArrayBuffer(file);
+    });
+
+    function searchData() {
+      const value = document.getElementById('searchInput').value.trim();
+      const matches = excelData.filter(row => {
+        return Object.values(row).some(v => String(v).trim() === value);
+      });
+      render(matches);
+    }
+
+    function render(rows) {
+      const container = document.getElementById('results');
+      container.innerHTML = '';
+      if (rows.length === 0) {
+        container.innerHTML = '<div class="card">Sonuç bulunamadı</div>';
+        return;
+      }
+      rows.forEach((row, index) => {
+        const barkod = String(row[headers[0]]).trim();
+        let html = '';
+        html += '<div class="card">';
+        html += '<div class="barcodeBox">';
+        html += '<svg id="barcode' + index + '"></svg>';
+        html += '<div style="color:black;font-size:20px;margin-top:10px;">' + barkod + '</div>';
+        html += '</div>';
+        headers.forEach(h => {
+          html += '<div class="row">';
+          html += '<div class="label">' + h + '</div>';
+          html += '<div>' + row[h] + '</div>';
+          html += '</div>';
+        });
+        html += '</div>';
+        container.innerHTML += html;
+        setTimeout(() => {
+          JsBarcode('#barcode' + index, barkod, {
+            format: 'CODE128',
+            displayValue: false,
+            width: 2,
+            height: 90,
+            margin: 10
+          });
+        }, 50);
+      });
+    }
+  </script>
+</body>
+
+</html>
+    
+  </body>
+  
+</html>

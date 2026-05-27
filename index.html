@@ -1,161 +1,238 @@
 <!DOCTYPE html>
-<html lang="en">
-
-  <head>
-    <meta charset="UTF-8">
-    <title>Untitled</title>
-    
-
-  </head>
-    
-  <body>
-  <!DOCTYPE html>
 <html lang="tr">
-
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title> Barkod Arama</title>
-  <script src="https://cdn.sheetjs.com/xlsx-0.20.2/package/dist/xlsx.full.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js"></script>
-  <style>
-    body {
-      font-family: Arial;
-      background: #111827;
-      color: white;
-      padding: 20px;
-    }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#111827">
+<title>Honeywell Barkod Stok</title>
 
-    .card {
-      background: #1f2937;
-      padding: 20px;
-      border-radius: 16px;
-      margin-bottom: 20px;
-    }
+<link rel="manifest" href="manifest.json">
 
-    input,
-    button {
-      width: 100%;
-      padding: 14px;
-      margin-top: 10px;
-      border: none;
-      border-radius: 10px;
-      font-size: 18px;
-    }
+<script src="https://cdn.sheetjs.com/xlsx-0.20.2/package/dist/xlsx.full.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js"></script>
 
-    input {
-      background: #374151;
-      color: white;
-    }
-
-    button {
-      background: #2563eb;
-      color: white;
-      font-weight: bold;
-    }
-
-    .barcodeBox {
-      background: white;
-      padding: 20px;
-      border-radius: 12px;
-      margin-top: 20px;
-      text-align: center;
-    }
-
-    svg {
-      width: 100%;
-      max-width: 600px;
-      height: 140px;
-    }
-
-    .row {
-      padding: 8px;
-      border-bottom: 1px solid #374151;
-    }
-
-    .label {
-      font-weight: bold;
-      color: #93c5fd;
-    }
-  </style>
+<style>
+body{
+font-family:Arial,sans-serif;
+background:#111827;
+color:white;
+margin:0;
+padding:20px;
+}
+.container{
+max-width:1100px;
+margin:auto;
+}
+.card{
+background:#1f2937;
+padding:20px;
+border-radius:16px;
+margin-bottom:20px;
+}
+input,button{
+width:100%;
+padding:14px;
+margin-top:10px;
+border:none;
+border-radius:10px;
+font-size:18px;
+}
+input{
+background:#374151;
+color:white;
+}
+button{
+background:#2563eb;
+color:white;
+font-weight:bold;
+}
+.redBtn{
+background:#dc2626;
+margin-top:10px;
+}
+.result{
+background:#0f172a;
+padding:20px;
+border-radius:12px;
+margin-top:20px;
+}
+.row{
+padding:8px;
+border-bottom:1px solid #374151;
+}
+.label{
+font-weight:bold;
+color:#93c5fd;
+}
+.barcodeBox{
+background:white;
+padding:20px;
+border-radius:12px;
+text-align:center;
+margin-top:20px;
+}
+.smallText{
+color:#111;
+font-size:16px;
+margin-top:10px;
+}
+svg{
+width:100%;
+max-width:600px;
+height:140px;
+}
+</style>
 </head>
 
 <body>
-  <div class="card">
-    <h2> Barkod Arama</h2>
-    <input type="file" id="fileInput" accept=".xlsx,.xls">
-    <input type="text" id="searchInput" placeholder="Arama">
-    <button onclick="searchData()">Ara</button>
-  </div>
-  <div id="results"></div>
-  <script>
-    let excelData = [];
-    let headers = [];
-    document.getElementById('fileInput').addEventListener('change', function(e) {
-      const file = e.target.files[0];
-      const reader = new FileReader();
-      reader.onload = function(evt) {
-        const data = new Uint8Array(evt.target.result);
-        const workbook = XLSX.read(data, {
-          type: 'array'
-        });
-        const sheet = workbook.Sheets[workbook.SheetNames[0]];
-        excelData = XLSX.utils.sheet_to_json(sheet, {
-          defval: ''
-        });
-        headers = Object.keys(excelData[0]);
-        alert('Excel yüklendi');
-      };
-      reader.readAsArrayBuffer(file);
-    });
 
-    function searchData() {
-      const value = document.getElementById('searchInput').value.trim();
-      const matches = excelData.filter(row => {
-        return Object.values(row).some(v => String(v).trim() === value);
-      });
-      render(matches);
-    }
+<div class="container">
 
-    function render(rows) {
-      const container = document.getElementById('results');
-      container.innerHTML = '';
-      if (rows.length === 0) {
-        container.innerHTML = '<div class="card">Sonuç bulunamadı</div>';
-        return;
-      }
-      rows.forEach((row, index) => {
-        const barkod = String(row[headers[0]]).trim();
-        let html = '';
-        html += '<div class="card">';
-        html += '<div class="barcodeBox">';
-        html += '<svg id="barcode' + index + '"></svg>';
-        html += '<div style="color:black;font-size:20px;margin-top:10px;">' + barkod + '</div>';
-        html += '</div>';
-        headers.forEach(h => {
-          html += '<div class="row">';
-          html += '<div class="label">' + h + '</div>';
-          html += '<div>' + row[h] + '</div>';
-          html += '</div>';
-        });
-        html += '</div>';
-        container.innerHTML += html;
-        setTimeout(() => {
-          JsBarcode('#barcode' + index, barkod, {
-            format: 'CODE128',
-            displayValue: false,
-            width: 2,
-            height: 90,
-            margin: 10
-          });
-        }, 50);
-      });
-    }
-  </script>
+<div class="card">
+
+<h2>Honeywell Barkod Stok</h2>
+
+<input type="file" id="fileInput" accept=".xlsx,.xls">
+
+<input type="text" id="searchInput" placeholder="Ürün ara">
+
+<button onclick="searchData()">Ara</button>
+
+<p id="status"></p>
+
+</div>
+
+<div id="results"></div>
+
+</div>
+
+<script>
+
+if ('serviceWorker' in navigator) {
+navigator.serviceWorker.register('./sw.js');
+}
+
+let excelData=[];
+let headers=[];
+
+document.getElementById('fileInput').addEventListener('change', function(e){
+
+const file=e.target.files[0];
+
+if(!file)return;
+
+const reader=new FileReader();
+
+reader.onload=function(evt){
+
+const data=new Uint8Array(evt.target.result);
+
+const workbook=XLSX.read(data,{type:'array'});
+
+const sheet=workbook.Sheets[workbook.SheetNames[0]];
+
+excelData=XLSX.utils.sheet_to_json(sheet,{defval:''});
+
+headers=Object.keys(excelData[0] || {});
+
+document.getElementById('status').innerText='Excel yüklendi';
+
+};
+
+reader.readAsArrayBuffer(file);
+
+});
+
+function searchData(){
+
+const val=document.getElementById('searchInput').value.trim();
+
+const matches=excelData.filter(row=>{
+return Object.values(row).some(v=>String(v).trim()===val);
+});
+
+render(matches);
+
+}
+
+function render(rows){
+
+const container=document.getElementById('results');
+
+container.innerHTML='';
+
+if(rows.length===0){
+container.innerHTML='<div class="card">Sonuç bulunamadı</div>';
+return;
+}
+
+rows.forEach((row,index)=>{
+
+const barkod=String(row[headers[0]]).trim();
+
+const savedStock=localStorage.getItem('stock_'+barkod);
+
+let html='';
+
+html+='<div class="card">';
+
+html+='<div class="barcodeBox">';
+html+='<svg id="barcode'+index+'"></svg>';
+html+='<div style="color:black;font-size:20px;margin-top:10px;">'+barkod+'</div>';
+html+='<div class="smallText">Girilen Stok: '+(savedStock ? savedStock : 'Girilmedi')+'</div>';
+html+='</div>';
+
+headers.forEach(h=>{
+html+='<div class="row"><div class="label">'+h+'</div><div>'+row[h]+'</div></div>';
+});
+
+html+='<input type="number" id="stockInput'+index+'" placeholder="Girilen stok">';
+html+='<button onclick="saveStock(\''+barkod+'\','+index+')">Kaydet</button>';
+html+='<button class="redBtn" onclick="resetStock(\''+barkod+'\')">Sıfırla</button>';
+
+html+='</div>';
+
+container.innerHTML+=html;
+
+setTimeout(function(){
+
+JsBarcode('#barcode'+index,barkod,{
+format:'CODE128',
+displayValue:false,
+width:2,
+height:90,
+margin:10
+});
+
+},50);
+
+});
+
+}
+
+function saveStock(barkod,index){
+
+const value=document.getElementById('stockInput'+index).value;
+
+localStorage.setItem('stock_'+barkod,value);
+
+alert('Kaydedildi');
+
+searchData();
+
+}
+
+function resetStock(barkod){
+
+localStorage.removeItem('stock_'+barkod);
+
+alert('Sıfırlandı');
+
+searchData();
+
+}
+
+</script>
+
 </body>
-
-</html>
-    
-  </body>
-  
 </html>
